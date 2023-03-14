@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=2059
+# shellcheck disable=2206
+
+IFS='' read -r -d '' AFRICA << "EOF"
+            ___________
+           / |       | |
+        ,' ,'         \/',_    __
+     ,'__/             |    ',|  "'-,,,,,,,
+   ,/  _|',            |                |   \
+   |  |   |',           \               |    \
+   |__|   |  ',          ',             |     \
+  /       |     ',        ,_"""""---'-_,'______\
+ /        |        ',,_-'"    |        |        ',
+|_________|         |         /        |        / ',,'""""|
+|__  |        ,____/         |        _|       /    |___  /
+'\___|      ,'_,'|_,-,_______|         |       /      , '/
+  \,' _', _/  ,, ,',|        |          \       |   '" ,'
+   \ / |_ ,  |  \||||       ,' |      ,'|    _""    |,'
+    ' ,'  ', |  ||||| __ ,'   _|_ ,'    |    |""---/
+       ' ,"""','"""""" |     /           \"""|    /
+                      |_____|_      __''"    \   |
+                     |  |  /  """"""   |      \ /
+                      \ / |            |       /
+                       \--'            |      /
+                       |   \__        _|__    |
+                       |      |__     |   ',,,|
+                       |         |____|   /   |
+                       /         _|    ,,'_   |
+                      |__________|___,'  ,,' /
+                       \      ---'    \,/  ,'
+                        \     |    ,,,' \_/
+                         |    |_,''      |/
+                         |    |         _|
+                          \___'        /
+                           \       __,'
+                            \_____/
+EOF
+
+BLACK="\u001b[30m"
+RED="\u001b[31m"
+GREEN="\u001b[32m"
+YELLOW="\u001b[33m"
+BLUE="\u001b[34m"
+MAGENTA="\u001b[35m"
+CYAN="\u001b[36m"
+WHITE="\u001b[37m"
+CLEAR="\u001b[{2}J"
+RESET_COLOR="\u001b[0m"
+
+MOVEMENT_PATH=(
+  "32,31"
+  "31,32"
+  "31,33"
+  "30,34"
+  "29,34"
+  "28,36"
+  "27,37"
+  "26,38"
+  "25,39"
+  "24,40"
+  "23,41"
+  "22,42"
+  "21,43"
+  "20,44"
+  "19,45"
+  "18,45"
+  "17,45"
+  "16,45"
+  "15,45"
+  "14,45"
+  "13,45"
+  "12,45"
+  "11,45"
+  "10,45"
+  "9,45"
+  "8,45"
+  "7,45"
+  "6,45"
+  "5,45"
+  "4,45"
+  "3,45"
+  "2,45"
+)
+
+ELEPHANTS=(
+  "22,42"
+  "14,45"
+  # "6,45" # Cairo
+)
+
+move() {
+  loc=(${1//,/ })
+  printf "\u001b[${loc[0]};${loc[1]}H"
+}
+
+on_done() {
+  clear
+  printf "\u001b[?25h"
+  exit
+}
+
+trap on_done SIGINT
+
+printf "\u001b[?25l"
+clear
+
+echo "$AFRICA"
+
+while true; do
+  for person_point in "${MOVEMENT_PATH[@]}"; do
+    # Draw path
+    printf "$GREEN"
+    for path_point in "${MOVEMENT_PATH[@]}"; do
+      move "$path_point"
+      echo "░"
+    done
+
+    # Draw elephants
+    for elephant in "${ELEPHANTS[@]}"; do
+      move "$elephant"
+      echo "E"
+    done
+
+    # Draw current position
+    printf "$BLUE"
+    move "$person_point"
+    echo "█"
+
+    # Did we find an elephant?
+    for elephant in "${ELEPHANTS[@]}"; do
+      loc=(${elephant//,/ })
+      if [[ $person_point == "$elephant" ]]; then
+        # wait 2 seconds when we find an elephant
+        # then break out two levels to start again
+        sleep 2
+        break 2
+      fi
+    done
+
+    # Did we drown?
+    if [[ $person_point == "2,45" ]]; then
+      # graphic drowning
+      printf "$RED"
+      move '2,45'
+      echo "X <-- You drowned"
+      sleep 2
+      # clean up this mess
+      printf "$CLEAR"
+      move '0,0'
+      printf "$RESET_COLOR"
+      echo "$AFRICA"
+      break
+    fi
+
+    sleep 0.1 # how long to wait between moves
+  done
+done
